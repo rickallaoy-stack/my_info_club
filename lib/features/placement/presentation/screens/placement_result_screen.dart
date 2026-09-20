@@ -36,13 +36,11 @@ class PlacementResultScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.xl),
               FilledButton(
                 onPressed: () async {
-                  final preferences = await SharedPreferences.getInstance();
                   final userId = ref.read(currentUserProvider)?.id;
-                  if (userId == null) return;
-                  await preferences.setBool(
-                    'placement_completed_$userId',
-                    true,
-                  );
+                  if (userId != null) {
+                    final prefs = await SharedPreferences.getInstance();
+                    await prefs.setBool('placement_completed_$userId', true);
+                  }
                   if (context.mounted) context.go('/dashboard');
                 },
                 child: const Text('Accéder à mon espace'),

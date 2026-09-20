@@ -8,6 +8,7 @@ import '../../../competencies/data/repositories/competency_points_repository.dar
 import '../../../competencies/domain/providers/competency_points_provider.dart';
 import '../../data/repositories/trainer_repository.dart';
 import '../../domain/providers/trainer_provider.dart';
+import '../../../dashboard/domain/providers/role_override_provider.dart';
 
 class StudentProfileScreen extends ConsumerWidget {
   final String studentId;
@@ -17,7 +18,8 @@ class StudentProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final role = ref.watch(currentProfileProvider).valueOrNull?.role;
-    if (role != 'trainer' && role != 'admin') {
+    final unlocked = ref.watch(formateurModeProvider);
+    if (!(role == 'trainer' || role == 'admin' || unlocked)) {
       return const Scaffold(
         body: Center(child: Text('Cette page est réservée aux formateurs.')),
       );

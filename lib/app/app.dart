@@ -2,28 +2,48 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'router.dart';
+import '../core/sections/section_controller.dart';
+import '../core/sections/section_theme.dart';
 import '../core/theme/app_theme.dart';
-import '../core/providers/theme_mode_provider.dart';
-import '../features/live_quiz/presentation/widgets/live_quiz_overlay.dart';
 
 class ClubInfoApp extends ConsumerWidget {
-  const ClubInfoApp({super.key});
+  final bool isConfigured;
+
+  const ClubInfoApp({super.key, this.isConfigured = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!isConfigured) {
+      return MaterialApp(
+        title: 'Club Informatique',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.light,
+        home: const Scaffold(
+          body: Center(
+            child: Padding(
+              padding: EdgeInsets.all(24),
+              child: Text(
+                'Configuration Supabase manquante.\n'
+                'Ajoutez les variables SUPABASE_URL et SUPABASE_ANON_KEY, '
+                'ou lancez via le script de dev.',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final router = ref.watch(appRouterProvider);
-    final themeMode = ref.watch(themeModeProvider);
+    final section = ref.watch(sectionProvider).value;
 
     return MaterialApp.router(
       title: 'Club Informatique',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
-      darkTheme: AppTheme.dark,
-      themeMode: themeMode,
+      theme: buildSectionTheme(AppTheme.light, section),
+      darkTheme: buildSectionTheme(AppTheme.dark, section),
+      themeMode: ThemeMode.system,
       routerConfig: router,
-      // Actif sur toute l'appli : dès qu'un formateur/admin lance un quiz,
-      // le popup s'ouvre par-dessus l'écran courant, quel qu'il soit.
-      builder: (context, child) => LiveQuizOverlay(child: child ?? const SizedBox.shrink()),
     );
   }
 }

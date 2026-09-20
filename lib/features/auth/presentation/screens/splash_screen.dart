@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/providers/auth_provider.dart';
+import '../../../../core/sections/section_controller.dart';
 import '../../../../core/theme/app_colors.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -123,12 +124,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     if (!isLoggedIn) {
       context.go('/login');
-    } else if (profile?.role == 'member' &&
-        profile?.currentLevelId == null &&
-        !placementCompleted) {
-      context.go('/placement/survey');
     } else {
-      context.go('/dashboard');
+      final section = await ref.read(sectionProvider.future);
+      if (!mounted) return;
+      if (section == null) {
+        context.go('/sections');
+      } else if (profile?.role == 'member' &&
+          profile?.currentLevelId == null &&
+          !placementCompleted) {
+        context.go('/placement/survey');
+      } else {
+        context.go('/dashboard');
+      }
     }
   }
 
@@ -150,14 +157,14 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         child: Container(
           width: double.infinity,
           height: double.infinity,
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                AppColors.darkBackground,
-                Color(0xFF111D36),
-                Color(0xFF172554),
+                colors.primary,
+                colors.primaryContainer,
+                colors.secondary,
               ],
             ),
           ),
@@ -203,10 +210,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 ),
                               ],
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.terminal_rounded,
                               size: 58,
-                              color: Colors.white,
+                              color: colors.onPrimary,
                             ),
                           ),
                         ),
@@ -227,7 +234,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 .textTheme
                                 .headlineMedium
                                 ?.copyWith(
-                                  color: Colors.white,
+                                  color: colors.onSurface,
                                   fontWeight: FontWeight.w800,
                                   letterSpacing: -0.8,
                                 ),
@@ -240,7 +247,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
                                 .textTheme
                                 .bodyMedium
                                 ?.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.64),
+                                  color: colors.onSurface.withOpacity(0.64),
                                   letterSpacing: 0.3,
                                 ),
                           ),

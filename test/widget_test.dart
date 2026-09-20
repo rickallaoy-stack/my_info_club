@@ -1,8 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:club_informatique_app/core/constants/env.dart';
 import 'package:club_informatique_app/features/auth/domain/validators/auth_validators.dart';
 
 void main() {
+  group('env startup', () {
+    test('startup validation should not throw when config is missing', () {
+      expect(() => Env.validateOrWarn(), returnsNormally);
+    });
+  });
+
   group('auth validators', () {
     test('password must be strong enough', () {
       expect(validatePassword('abcd123'), isNotNull);

@@ -1,3 +1,4 @@
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/errors/failure.dart';
@@ -6,12 +7,25 @@ import '../../../../core/errors/failure.dart';
 /// Aucune UI ne doit importer `supabase_flutter` directement : tout passe par ici.
 class AuthRepository {
   final SupabaseClient _client;
+  GoogleSignIn? _googleSignIn;
 
   AuthRepository(this._client);
 
   Stream<AuthState> get authStateChanges => _client.auth.onAuthStateChange;
 
   User? get currentUser => _client.auth.currentUser;
+
+  GoogleSignIn _getGoogleSignIn() {
+    _googleSignIn ??= GoogleSignIn(
+      serverClientId: const String.fromEnvironment('GOOGLE_SERVER_CLIENT_ID'),
+    );
+    return _googleSignIn!;
+  }
+
+  Future<void> initializeGoogleSignIn() async {
+    // Lazy initialization - only when actually needed
+    _getGoogleSignIn();
+  }
 
   Future<AuthProfile?> getCurrentProfile() async {
     final user = currentUser;
@@ -35,6 +49,39 @@ class AuthRepository {
   Future<void> signIn({required String email, required String password}) async {
     try {
       await _client.auth.signInWithPassword(email: email, password: password);
+    } on AuthException catch (e) {
+      throw Failure(e.message, code: e.code);
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    try {
+      final account = await _getGoogleSignIn().signIn();
+      if (account == null) {
+        throw Failure('Connexion Google annulée');
+      }
+
+      final googleAuth = await account.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        throw Failure('Impossible de récupérer le token Google');
+      }
+
+      await _client.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: googleAuth.accessToken,
+      );
+    } on AuthException catch (e) {
+      throw Failure(e.message, code: e.code);
+    } catch (e) {
+      throw Failure('Erreur lors de la connexion Google: $e');
+    }
+  }
+
+  Future<void> signInAnonymously() async {
+    try {
+      await _client.auth.signInAnonymously();
     } on AuthException catch (e) {
       throw Failure(e.message, code: e.code);
     }
@@ -78,7 +125,31 @@ class AuthRepository {
   }
 
   Future<void> signOut() async {
+    await _googleSignIn?.signOut();
     await _client.auth.signOut();
+  }
+
+  Future<void> linkAnonymousToEmail({
+    required String email,
+    required String password,
+    required String nom,
+    required String prenom,
+  }) async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null || !user.isAnonymous) {
+        throw Failure('Aucun utilisateur anonyme à lier');
+      }
+
+      await _client.auth.updateUser(
+        UserAttributes(email: email, password: password, data: {
+          'nom': nom,
+          'prenom': prenom,
+        }),
+      );
+    } on AuthException catch (e) {
+      throw Failure(e.message, code: e.code);
+    }
   }
 }
 

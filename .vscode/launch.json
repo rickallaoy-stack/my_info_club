@@ -7,7 +7,10 @@
       "type": "flutter",
       "program": "lib/main.dart",
       "args": [
-        "--web-port=9090"
+        "--web-port=9090",
+        "--dart-define=SUPABASE_URL=https://lmabxhlwgynujhfrjwqm.supabase.co",
+        "--dart-define=SUPABASE_ANON_KEY=sb_publishable_byrAlN288EeOpRzTmVVimQ_NUgLXWSB",
+        "--dart-define=TRAINER_ACCESS_CODE=change_moi_2026"
       ],
       "flutterMode": "debug"
     },
